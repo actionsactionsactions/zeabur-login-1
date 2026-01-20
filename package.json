@@ -1,0 +1,13 @@
+{
+  "name": "zeabur-keep-alive",
+  "version": "1.0.0",
+  "description": "Zeabur account keep-alive script using Cookie login",
+  "type": "module",
+  "scripts": {
+    "keep-alive": "node scripts/keep-alive.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "libsodium-wrappers": "^0.7.13"
+  }
+}
