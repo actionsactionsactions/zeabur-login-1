@@ -4,28 +4,22 @@
 
 ## 功能
 
-- ✅ 支持 Magic Link 登录（推荐）
-- ✅ 支持 Cookie 登录（备选）
+- ✅ 支持 Cookie 登录（优先）
+- ✅ 支持 Magic Link 登录（Cookie 失效时使用）
 - 📸 登录成功后截图并发送到 Telegram
 - 🔄 自动更新 Cookie 到 GitHub Secrets
 
 ## 配置步骤
 
-### 1. 获取登录凭证
-
-#### 方式一：Magic Link（推荐）
+### 1. 首次设置（Magic Link）
 
 1. 访问 [Zeabur 登录页](https://zeabur.com/login)
 2. 输入邮箱，点击「发送登录链接」
 3. 打开邮箱，**复制完整的登录链接**（不要点击）
 4. 链接格式：`https://zeabur.com/api/magic-link/callback?code=xxx&state=xxx`
+5. 将链接设置到 `ZEABUR_MAGIC_LINK` Secret
 
-#### 方式二：Cookie（备选）
-
-1. 登录 [Zeabur 控制台](https://zeabur.com)
-2. 浏览器 F12 打开开发者工具
-3. **Application → Cookies → zeabur.com**
-4. 复制所有 Cookie，格式：`name1=value1; name2=value2`
+> 首次 Magic Link 登录成功后，Cookie 会自动保存，后续无需再设置 Magic Link。
 
 ### 2. 创建 Telegram Bot
 
@@ -46,19 +40,27 @@
 
 进入仓库 **Settings → Secrets and variables → Actions**：
 
-| Secret 名称 | 必填 | 说明 |
-|------------|------|------|
-| `ZEABUR_MAGIC_LINK` | 二选一 | Magic Link 登录链接（推荐） |
-| `ZEABUR_COOKIE` | 二选一 | Cookie 登录凭证（备选） |
-| `REPO_TOKEN` | ✅ | GitHub PAT（用于自动更新 Cookie） |
-| `TG_BOT_TOKEN` | ✅ | Telegram Bot Token |
-| `TG_CHAT_ID` | ✅ | Telegram Chat ID |
+| Secret 名称 | 说明 |
+|------------|------|
+| `ZEABUR_MAGIC_LINK` | Magic Link（首次使用或 Cookie 失效时设置） |
+| `ZEABUR_COOKIE` | Cookie（自动生成，无需手动设置） |
+| `REPO_TOKEN` | GitHub PAT（用于自动更新 Cookie） |
+| `TG_BOT_TOKEN` | Telegram Bot Token |
+| `TG_CHAT_ID` | Telegram Chat ID |
 
-> **登录优先级**：Magic Link → Cookie。首次使用 Magic Link 登录后，Cookie 会自动更新，后续可依赖 Cookie。
+## 登录优先级
+
+```
+Cookie（优先）→ Magic Link（备选）
+```
+
+- 日常运行：自动使用 Cookie
+- Cookie 过期：尝试 Magic Link，成功后自动更新 Cookie
+- 两者都失败：发送 Telegram 通知，提示设置新的 Magic Link
 
 ## 执行频率
 
-默认每天 08:00（北京时间）执行。修改 cron：
+默认每天 08:00（北京时间）执行。修改 `.github/workflows/keep-alive.yml` 中的 cron：
 
 ```yaml
 schedule:
@@ -71,7 +73,7 @@ schedule:
 ```bash
 pip install -r requirements.txt
 playwright install chromium
-export ZEABUR_MAGIC_LINK="your_magic_link"  # 或 ZEABUR_COOKIE
+export ZEABUR_COOKIE="your_cookie"  # 或 ZEABUR_MAGIC_LINK
 export TG_BOT_TOKEN="your_bot_token"
 export TG_CHAT_ID="your_chat_id"
 python scripts/keep_alive.py
